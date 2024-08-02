@@ -238,7 +238,7 @@ class VitInference:
                                 device=self.device if self.device != 'cuda' else 0,
                                 classes=self.yolo_classes)[0]
             res_pd = np.array([r[:5].tolist() for r in  # TODO: Confidence threshold
-                               results.boxes.data.cpu().numpy() if r[4] > 0.35]).reshape((-1, 5))
+                               results.boxes.data.cpu().numpy() if r[4] > 0.15]).reshape((-1, 5))
         self.frame_counter += 1
 
         frame_keypoints = {}
@@ -255,6 +255,8 @@ class VitInference:
 
         if ids is None:
             ids = range(len(bboxes))
+        
+        print(len(bboxes))
 
         for bbox, id in zip(bboxes, ids):
             # TODO: Slightly bigger bbox
@@ -264,6 +266,8 @@ class VitInference:
             # Crop image and pad to 3/4 aspect ratio
             img_inf = img[bbox[1]:bbox[3], bbox[0]:bbox[2]]
             img_inf, (left_pad, top_pad) = pad_image(img_inf, 3 / 4)
+            
+            # cv2.imwrite("intermed.png",img_inf)
 
             keypoints = self._inference(img_inf)[0]
             # Transform keypoints to original image
@@ -275,12 +279,13 @@ class VitInference:
             self._img = img
             self._yolo_res = results
             self._tracker_res = (bboxes, ids, scores)
+            print(self._tracker_res)
             self._keypoints = frame_keypoints
             self._scores_bbox = scores_bbox
 
         return frame_keypoints
 
-    def draw(self, show_yolo=True, show_raw_yolo=False, confidence_threshold=0.5):
+    def draw(self, show_yolo=True, show_raw_yolo=False, confidence_threshold=0.1):
         """
         Draw keypoints and bounding boxes on the image.
 

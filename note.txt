@@ -1,0 +1,3 @@
+Quick Command:
+
+python inference.py --input pics/gt/0.png --model vitpose-h-ap10k.pth --yolo yolov8s.pt --model-name h --save-img --save-json --output-path res --yolo-size 128 --show-yolo
