@@ -20,6 +20,15 @@ except ModuleNotFoundError:
     has_onnx = False
 
 
+def crop_to_dim(frame,toHeight,toWidth):
+    
+    height,width,_ = frame.shape
+    center = max(toHeight,height)/2, max(toWidth,width)/2
+    x = int(center[1] - toWidth/2)
+    y = int(center[0] - toHeight/2)
+    frame = frame[y:y+toHeight, x:x+toWidth]
+    return frame
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--input', type=str, required=True,
@@ -133,7 +142,8 @@ if __name__ == "__main__":
     tot_time = 0.
     for (ith, img) in tqdm.tqdm(enumerate(reader), total=total_frames):
         t0 = time.time()
-
+        
+        img = crop_to_dim(img,200,300)
         # Run inference
         frame_keypoints = model.inference(img)
         keypoints.append(frame_keypoints)
@@ -151,6 +161,7 @@ if __name__ == "__main__":
                 # TODO: If exists add (1), (2), ...
                 if is_video:
                     out_writer.write(img)
+                    cv2.imwrite(f"vids/{ith}.png",img)
                 else:
                     print('>>> Saving output image')
                     cv2.imwrite(output_path_img, img)
