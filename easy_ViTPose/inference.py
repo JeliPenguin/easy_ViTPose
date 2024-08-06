@@ -81,7 +81,6 @@ class VitInference:
     def __init__(self, model: str,
                  yolo: str,
                  model_name: Optional[str] = None,
-                 det_class: Optional[str] = None,
                  dataset: Optional[str] = None,
                  yolo_size: Optional[int] = 320,
                  device: Optional[str] = None,
@@ -129,11 +128,6 @@ class VitInference:
 
         # Dataset can now be set for visualization
         self.dataset = dataset
-
-        # if we picked the dataset switch to correct yolo classes if not set
-        if det_class is None:
-            det_class = 'animals' if dataset in ['ap10k', 'apt36k'] else 'human'
-        self.yolo_classes = DETC_TO_YOLO_YOLOC[det_class]
 
         assert model_name in [None, 's', 'b', 'l', 'h'], \
             f'The model name {model_name} is not valid'
@@ -218,7 +212,7 @@ class VitInference:
         """
         raise NotImplementedError
 
-    def inference(self, img: np.ndarray) -> dict[typing.Any, typing.Any]:
+    def inference(self, img: np.ndarray):
         """
         Perform inference on the input image.
 
@@ -234,11 +228,21 @@ class VitInference:
         results = None
         if (self.tracker is None or
            (self.frame_counter % self.yolo_step == 0 or self.frame_counter < 3)):
-            results = self.yolo(img[..., ::-1], verbose=False, imgsz=self.yolo_size,
-                                device=self.device if self.device != 'cuda' else 0,
-                                classes=self.yolo_classes)[0]
-            res_pd = np.array([r[:5].tolist() for r in  # TODO: Confidence threshold
-                               results.boxes.data.cpu().numpy() if r[4] > 0.15]).reshape((-1, 5))
+            # results = self.yolo(img[..., ::-1], verbose=False, imgsz=self.yolo_size,
+            #                     device=self.device if self.device != 'cuda' else 0,)[0]
+
+            # res_pd = np.array([r[:5].tolist() for r in  # TODO: Confidence threshold
+            #                    results.boxes.data.cpu().numpy() if r[4] > 0.05]).reshape((-1, 5))
+            
+            # # print(results.boxes.data.shape,res_pd.shape)
+            # print(res_pd)
+            
+            # Skip YOLO step, bounding box set as the whole image
+            res_pd = np.zeros((1, 5))
+            res_pd[0][2] = img.shape[1]
+            res_pd[0][3] = img.shape[1]
+            res_pd[0][4] = 0.5
+            
         self.frame_counter += 1
 
         frame_keypoints = {}
@@ -255,8 +259,6 @@ class VitInference:
 
         if ids is None:
             ids = range(len(bboxes))
-        
-        print(len(bboxes))
 
         for bbox, id in zip(bboxes, ids):
             # TODO: Slightly bigger bbox
@@ -279,13 +281,12 @@ class VitInference:
             self._img = img
             self._yolo_res = results
             self._tracker_res = (bboxes, ids, scores)
-            print(self._tracker_res)
             self._keypoints = frame_keypoints
             self._scores_bbox = scores_bbox
 
         return frame_keypoints
 
-    def draw(self, show_yolo=True, show_raw_yolo=False, confidence_threshold=0.1):
+    def draw(self, show_yolo=True, show_raw_yolo=False, confidence_threshold=0.01):
         """
         Draw keypoints and bounding boxes on the image.
 

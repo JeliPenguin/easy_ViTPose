@@ -4,3 +4,6 @@ python inference.py --input pics/gt/0.png --model vitpose-h-ap10k.pth --yolo yol
 
 
 python inference.py --input robodog.mp4 --model vitpose-h-ap10k.pth --yolo yolov8s.pt --model-name h --save-img --output-path res --yolo-size 128 --show-yolo --single-pose 
+
+
+python inference.py --input ../videos/robodog.mp4 --save-img --output-path res --show-yolo
