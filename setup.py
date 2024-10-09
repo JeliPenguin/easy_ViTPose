@@ -52,6 +52,6 @@ setup(
         "typing_extensions==4.8.0",
         "tzdata==2023.3",
         "ultralytics==8.2.48",
-        "zipp==3.17.0",
+        "zipp==3.20.2",
     ]
 )

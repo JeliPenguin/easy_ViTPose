@@ -79,7 +79,6 @@ class VitInference:
     """
 
     def __init__(self, model: str,
-                 yolo: str,
                  model_name: Optional[str] = None,
                  dataset: Optional[str] = None,
                  yolo_size: Optional[int] = 320,
@@ -88,7 +87,6 @@ class VitInference:
                  single_pose: Optional[bool] = False,
                  yolo_step: Optional[int] = 1):
         assert os.path.isfile(model), f'The model file {model} does not exist'
-        assert os.path.isfile(yolo), f'The YOLOv8 model {yolo} does not exist'
 
         # Device priority is cuda / mps / cpu
         if device is None:
@@ -100,7 +98,6 @@ class VitInference:
                 device = 'cpu'
 
         self.device = device
-        self.yolo = YOLO(yolo, task='detect')
         self.yolo_size = yolo_size
         self.yolo_step = yolo_step
         self.is_video = is_video
